@@ -1,7 +1,7 @@
 class StoriesController < ApplicationController
   before_action :authenticate_user!
   before_action :set_story, only: [:show, :edit, :update, :destroy]
-  before_action :check_owner, only:[:edit]
+  before_action :owner?, only:[:edit]
   
 
   # GET /stories
@@ -44,7 +44,9 @@ class StoriesController < ApplicationController
   # PATCH/PUT /stories/1
   # PATCH/PUT /stories/1.json
   def update
+    
     respond_to do |format|
+    
       if current_user.admin?
         if @story.update(story_params)
           format.html { redirect_to @story, notice: 'Story was successfully updated.' }
@@ -75,7 +77,7 @@ class StoriesController < ApplicationController
       @story = Story.find(params[:id])
     end
 
-    def check_owner
+    def owner?
       redirect_to root_path, notice: 'acceso no autorizado' if @story.user != current_user      
     end
 
