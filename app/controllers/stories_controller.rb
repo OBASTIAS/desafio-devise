@@ -1,7 +1,8 @@
 class StoriesController < ApplicationController
+  before_action :authenticate_user!
   before_action :set_story, only: [:show, :edit, :update, :destroy]
-  before_action :set_story, only: [:show, :edit, :update, :destroy]
-  before_action :owner?, only:[:edit]
+  before_action :check_owner, only:[:edit]
+  
 
   # GET /stories
   # GET /stories.json
@@ -9,7 +10,7 @@ class StoriesController < ApplicationController
     @stories = Story.all
   end
 
-  # GET /stories/1
+  # GET /stories/1check_owner
   # GET /stories/1.json
   def show
   end
@@ -26,7 +27,8 @@ class StoriesController < ApplicationController
   # POST /stories
   # POST /stories.json
   def create
-    @story = Story.new(story_params)
+    @story = Story.new(story_params.merge(user: current_user))
+    @story.user = current_user
 
     respond_to do |format|
       if @story.save
@@ -43,12 +45,16 @@ class StoriesController < ApplicationController
   # PATCH/PUT /stories/1.json
   def update
     respond_to do |format|
-      if @story.update(story_params)
-        format.html { redirect_to @story, notice: 'Story was successfully updated.' }
-        format.json { render :show, status: :ok, location: @story }
+      if current_user.admin?
+        if @story.update(story_params)
+          format.html { redirect_to @story, notice: 'Story was successfully updated.' }
+          format.json { render :show, status: :ok, location: @story }
+        else
+          format.html { render :edit }
+          format.json { render json: @story.errors, status: :unprocessable_entity }
+        end
       else
-        format.html { render :edit }
-        format.json { render json: @story.errors, status: :unprocessable_entity }
+        format.html { render :edit, notice: "Solo Admins pueden Editar" }
       end
     end
   end
@@ -69,9 +75,10 @@ class StoriesController < ApplicationController
       @story = Story.find(params[:id])
     end
 
-    def owner?
-      redirect_to root_path, notice: 'Access Denied' if @story.user != current_user      
+    def check_owner
+      redirect_to root_path, notice: 'acceso no autorizado' if @story.user != current_user      
     end
+
     # Never trust parameters from the scary internet, only allow the white list through.
     def story_params
       params.require(:story).permit(:title, :picture, :content)

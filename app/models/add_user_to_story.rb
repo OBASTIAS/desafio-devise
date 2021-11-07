@@ -1,2 +1,0 @@
-class AddUserToStory < ApplicationRecord
-end
