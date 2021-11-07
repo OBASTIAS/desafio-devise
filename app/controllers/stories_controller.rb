@@ -1,5 +1,7 @@
 class StoriesController < ApplicationController
   before_action :set_story, only: [:show, :edit, :update, :destroy]
+  before_action :set_story, only: [:show, :edit, :update, :destroy]
+  before_action :owner?, only:[:edit]
 
   # GET /stories
   # GET /stories.json
@@ -67,6 +69,9 @@ class StoriesController < ApplicationController
       @story = Story.find(params[:id])
     end
 
+    def owner?
+      redirect_to root_path, notice: 'Access Denied' if @story.user != current_user      
+    end
     # Never trust parameters from the scary internet, only allow the white list through.
     def story_params
       params.require(:story).permit(:title, :picture, :content)
